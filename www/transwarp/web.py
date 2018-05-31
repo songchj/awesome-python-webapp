@@ -255,7 +255,7 @@ def _to_str(s):
     return str(s)
 
 def _to_unicode(s, encoding='utf-8'):
-    return s.decode('utf-8')
+    return s.decode(encoding)
 
 def _quote(s, encoding='utf-8'):
     if isinstance(s, unicode):
@@ -375,7 +375,7 @@ class MultipartFile(object):
 
 class Request(object):
     
-    def __init(self, environ):
+    def __init__(self, environ):
         self._environ = environ
     
     def _parse_input(self):
@@ -754,8 +754,9 @@ class WSGIApplication(object):
     
     def run(self, port=9000, host='127.0.0.1'):
         from wsgiref.simple_server import make_server
-        logging.info('applecation (%s) will start at %s:%s...' % (self._document_root, host, port))
+        logging.info('application (%s) will start at %s:%s...' % (self._document_root, host, port))
         server = make_server(host, port, self.get_wsgi_application(debug=True))
+        server.serve_forever()
     
     def get_wsgi_application(self, debug=False):
         self._check_not_running()
@@ -791,7 +792,7 @@ class WSGIApplication(object):
         fn_exec = _build_interceptor_chain(fn_route, *self._interceptors)
 
         def wsgi(env, start_response):
-            ctx.applecation = _application
+            ctx.application = _application
             ctx.request = Request(env)
             response = ctx.response = Response()
             try:
@@ -828,7 +829,7 @@ class WSGIApplication(object):
                     '</pre></div></body></html>']
 
             finally:
-                del ctx.applecation
+                del ctx.application
                 del ctx.request
                 del ctx.response
         return wsgi

@@ -46,8 +46,9 @@ class _LasyConnection(object):
 
     def cursor(self):
         if self.connection is None:
-            config = { 'user': 'root','password': 'password','database': 'test' }
+            config = { 'user': 'www-data','password': 'www-data','database': 'awesome' }
             connection = mysql.connector.connect(**config)
+            # connection = engine.connect()
             logging.info('open connection <%s>...' % hex(id(connection)))
             self.connection = connection
         return self.connection.cursor()
@@ -98,12 +99,18 @@ class _Engine(object):
 #没有用到这个函数，没有理解廖大神的精髓，按照他的写法，每次执行第二次sql语句的时候都会报错，
 # 因为第一次执行完sql语句，把connection给关掉了
 def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
+    print "enter create_engine user=%s, password=%s, database=%s, host=%s, port=%s" % (user, password, database, host, port)
+    print kw
     global engine
     if engine is not None:
         raise DBError('Engine is already initialized.')
-    config = { 'user': 'root','password': 'password','database': 'test' }
-    cnx = mysql.connector.connect(**config)
-    engine = _Engine(cnx)
+    params = dict(user=user, password=password, database=database, host=host, port=port)
+    defaults = dict(use_unicode=True, charset='utf8', collation='utf8_general_ci', autocommit=False)
+    for k, v in defaults.iteritems():
+        params[k] = kw.pop(k, v)
+    params.update(kw)
+    params['buffered'] = True
+    engine = _Engine(lambda: mysql.connector.connect(**params))
     # test connection...
     logging.info('Init mysql engine <%s> ok.' % hex(id(engine)))
     
@@ -187,6 +194,7 @@ def with_transaction(func):
 
 
 def _select(sql, first, *args):
+    print 'enter _select'
     global _db_ctx
     cursor = None
     sql  = sql.replace('?', '%s')
@@ -201,7 +209,7 @@ def _select(sql, first, *args):
             print values
             if not values:
                 return None
-            return [Dict(names, values)]
+            return Dict(names, values)
         temp =  cursor.fetchall()
         print temp
         return [Dict(names, x) for x in temp]

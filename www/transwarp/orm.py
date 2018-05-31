@@ -113,7 +113,7 @@ class ModelMetaclass(type):
         if not hasattr(cls, 'subclasses'):
             cls.subclasses = {}
         
-        if not name in cls.subclass:
+        if not name in cls.subclasses:
             cls.subclasses[name] = name
         
         else:
@@ -165,7 +165,7 @@ class Model(dict):
         try:
             return self[key]
         except KeyError:
-            raise AttributeError(r"'Dict' object has no attribut '%s'" %kye)
+            raise AttributeError(r"'Dict' object has no attribut '%s'" % key)
     
     def __setattr__(self, key, value):
         self[key] = value
@@ -182,6 +182,7 @@ class Model(dict):
 
     @classmethod
     def find_all(cls, *args):
+        print "enter find_all"
         L = db.select('select * from `%s`' % cls.__table__)
         return [cls(**d) for d in L]
 
@@ -192,11 +193,11 @@ class Model(dict):
 
     @classmethod
     def count_all(cls):
-        return db.select_int('select count (`%s`)' % (cls.__primary_key__.neme, cls.__table__))
+        return db.select_int('select count(`%s`) from `%s`' % (cls.__primary_key__.name, cls.__table__))
     
     @classmethod
     def count_by(cls, where, *args):
-        return db.select_int('select count(`%s`) %s' % (cls.__primary_key__.name, cls.__table__, where), *args)
+        return db.select_int('select count(`%s`) from `%s` %s' % (cls.__primary_key__.name, cls.__table__, where), *args)
     
     @classmethod
     def update(self):
